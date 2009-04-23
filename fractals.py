@@ -26,3 +26,21 @@ def lindenmayer(axiom, rules):
     while True:
         yield axiom
         axiom = reduce(apply_rule, rules, axiom).upper()
+
+
+class GeneratorList(object):
+    """
+    Allows indexing of a generator
+
+    >>> g = GeneratorList(i for i in range(10))
+    >>> g[2]
+    2
+    """
+    def __init__(self, generator):
+        self.__generator = generator
+        self.__list = []
+
+    def __getitem__(self, index):
+        for _ in range(index - len(self.__list) + 1):
+            self.__list.append(self.__generator.next())
+        return self.__list[index]
