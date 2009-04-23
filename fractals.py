@@ -12,9 +12,9 @@ def lindenmayer(axiom, rules):
     >>> dragon.next()
     'FX+YF'
     >>> dragon.next()
-    'FX+YF+FX+YF-YF'
+    'FX+YF+FX-YF'
     >>> dragon.next()
-    'FX+YF+FX+YF-YF+FX+YF+FX+YF-YF-FX+YF-YF'
+    'FX+YF+FX-YF+FX+YF-FX-YF'
 
     Note: any keys in the "rules" dictionary must be uppercase
     """
