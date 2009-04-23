@@ -64,7 +64,8 @@ class LSystem(GeneratorList):
     restore: called on the character ']'. Restore the drawing state from
              the object's "states" list.
     """
-    def __init__(self, axiom, rules, angle, heading=0):
+    def __init__(self, turtle, start, rules, angle, heading=0):
+        self.turtle = turtle
         self.states = []
         self.angle = angle
         self.heading = heading
@@ -76,9 +77,44 @@ class LSystem(GeneratorList):
             '[': self.save,
             ']': self.restore,
         }
-        super(LSystem, self).__init__(lindenmayer(axiom, rules))
+        super(LSystem, self).__init__(lindenmayer(start, rules))
 
-    def draw(self, index):
+    def forward(self):
+        self.turtle.forward(self.size)
+
+    def right(self):
+        self.turtle.right(self.angle)
+
+    def left(self):
+        self.turtle.left(self.angle)
+
+    def go(self):
+        self.turtle.up()
+        self.turtle.forward(self.size)
+        self.turtle.down()
+
+    def save(self):
+        x, y = self.turtle.xcor(), self.turtle.ycor()
+        h, c = self.turtle.heading(), self.turtle.pencolor()
+        self.states.append((x, y, h, c))
+
+    def restore(self):
+        turtle.up()
+        x, y, h, c = self.states.pop()
+        turtle.setx(x)
+        turtle.sety(y)
+        turtle.setheading(h)
+        turtle.pencolor(c)
+        turtle.down()
+
+    def update(self):
+        pass
+
+    def draw(self, index, size=1):
+        self.turtle.setheading(self.heading)
+        self.size = size
+
         for char in self[index]:
             if char in self.actions:
+                self.update()
                 self.actions[char]()
