@@ -118,3 +118,19 @@ class LSystem(GeneratorList):
             if char in self.actions:
                 self.update()
                 self.actions[char]()
+
+
+if __name__ == '__main__':
+    from turtle import Turtle
+    turtle = Turtle()
+    turtle.hideturtle()
+    turtle.speed('fastest')
+
+    snowflake = LSystem(turtle, 'F++F++F', {'F': 'F-F++F-F'}, 60)
+    dragon = LSystem(turtle, 'FX', {'X': 'X+YF', 'Y': 'FX-Y'}, 90)
+    plant = LSystem(turtle, 'FX', {'X': 'F-[[X]+X]+F[+FX]-X', 'F': 'FF'}, 25)
+    serpinsky = LSystem(turtle, 'FA', {'FA': 'FB-FA-FB', 'FB': 'FA+FB+FA'}, 60)
+
+    dragon.draw(10)
+
+    turtle.screen.exitonclick()
