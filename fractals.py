@@ -1,6 +1,12 @@
 class ColorWheel:
     RED, YELLOW, GREEN, TEAL, BLUE, PURPLE = range(6)
 
+    # These modes are (color, channel, direction) tuples
+    # used to initialize the internal state from a given color
+    # For example, at 'red', the color is (255, 0, 0) and we are
+    # going towards yellow, so green (channel 1) is increasing (+1)
+    # then at yellow we are going towards green, so red (channel 0)
+    # is decreasing (-1), and so on.
     __modes = {
         'red': ((255, 0, 0), 1, 1),
         'yellow': ((255, 255, 0), 0, -1),
@@ -10,31 +16,48 @@ class ColorWheel:
         'purple': ((255, 0, 255), 2, -1),
     }
 
-    def __init__(self, color=RED, mode=255):
-        self.mode = mode
-        self.goto(color)
+    def __init__(self, color=RED, brightness=1, mode=255):
+        self.max = mode if mode in (1.0, 255) else 255
+        self.goto(color, brightness)
 
     def clamp(self, n):
-        return min(self.mode, max(0, n))
+        """
+        Return n or the closest value that is a valid color
+        given our color mode
+        """
+        return min(self.max, max(0, n))
 
-    def goto(self, color):
-        if not isinstance(color, basestring) \
-           or color.lower() not in self.__modes:
-            color = Red
-        color, self.channel, self.direction = self.__modes[color]
-        self.current = list(color)
+    def goto(self, color=None, brightness=None):
+        """
+        You may set color as a string from __modes (not case sensitive)
+        or by passing in a new color tuple.
+        You may change brightness by passing in a new brightness between
+        0 and 1
+        """
+        if isinstance(color, str) and color.lower() in self.__modes:
+            color, self.channel, self.direction = self.__modes[color.lower()]
+            self.__color = list(color)
+        elif isinstance(color, tuple):
+            self.__color = list(map(self.clamp, color[:3]))
+        if brightness is not None:
+            self.brightness = min(1, max(0, brightness))
+        return self.color
+
+    @property
+    def color(self):
+        return tuple(map(lambda c: c * self.brightness, self.__color))
 
     def rotate(self, amount):
-        current = self.current[self.channel]
-        if current == self.mode and self.direction > 0:
+        current = self.__color[self.channel]
+        if current == self.max and self.direction > 0:
             self.direction *= -1
             self.channel = (self.channel - 1) % 3
         elif current == 0 and self.direction < 0:
             self.direction *= -1
             self.channel = (self.channel + 2) % 3
         delta = self.direction * amount
-        self.current[self.channel] = self.clamp(current + delta)
-        return tuple(self.current)
+        self.__color[self.channel] = self.clamp(current + delta)
+        return self.color
 
 
 def lindenmayer(axiom, rules):
@@ -161,7 +184,7 @@ class LSystem(GeneratorList):
 
 class Dragon(LSystem):
     def __init__(self, turtle):
-        super(Serpinsky, self).__init__(turtle, 'FX', {'X': 'X+YF', 'Y': 'FX-Y'}, 90)
+        super(Dragon, self).__init__(turtle, 'FX', {'X': 'X+YF', 'Y': 'FX-Y'}, 90)
         self.colors = ColorWheel('purple')
         self.__cap, self.__current = 1, 0
 
@@ -172,39 +195,31 @@ class Dragon(LSystem):
         self.__current += 1
 
     def draw(self, *args, **kwargs):
-        self.turtle.pencolor(self.colors.current)
+        self.turtle.pencolor(self.colors.color)
         super(Dragon, self).draw(*args, **kwargs)
 
 
-class Serpinsky(LSystem):
-    def __init__(self, turtle):
-        super(Serpinsky, self).__init__(turtle, 'FA', {'FA': 'FB-FA-FB', 'FB': 'FA+FB+FA'}, 60)
-        self.colors = ColorWheel('yellow')
-        self.__cap, self.__current = 1, 0
-
-    def update(self):
-        if self.__cap == self.__current:
-            self.__cap *= 3
-            self.turtle.pencolor(self.colors.rotate(100))
-        self.__current += 1
-
-    def draw(self, *args, **kwargs):
-        self.turtle.pencolor(self.colors.current)
-        super(Serpinsky, self).draw(*args, **kwargs)
-
-
 if __name__ == '__main__':
+    import sys
     from turtle import Turtle
     turtle = Turtle()
     turtle.hideturtle()
     turtle.speed('fastest')
     turtle.screen.colormode(255)
+    turtle.up()
+    turtle.setposition(-200, 200)
+    turtle.down()
 
-    snowflake = LSystem(turtle, 'F++F++F', {'F': 'F-F++F-F'}, 60)
-    dragon = LSystem(turtle, 'FX', {'X': 'X+YF', 'Y': 'FX-Y'}, 90)
-    plant = LSystem(turtle, 'FX', {'X': 'F-[[X]+X]+F[+FX]-X', 'F': 'FF'}, 25)
-    serpinsky = LSystem(turtle, 'FA', {'FA': 'FB-FA-FB', 'FB': 'FA+FB+FA'}, 60)
+    fractals = {
+        'snowflake': LSystem(turtle, 'F++F++F', {'F': 'F-F++F-F'}, 60),
+        'dragon': LSystem(turtle, 'FX', {'X': 'X+YF', 'Y': 'FX-Y'}, 90),
+        'plant': LSystem(turtle, 'FX', {'X': 'F-[[X]+X]+F[+FX]-X', 'F': 'FF'}, 25),
+        'serpinsky': LSystem(turtle, 'FA', {'FA': 'FB-FA-FB', 'FB': 'FA+FB+FA'}, 60),
+        'colored_dragon': Dragon(turtle),
+    }
 
-    Serpinsky(turtle).draw(9)
+    name, num = sys.argv[1], int(sys.argv[2])
+    fractals[name].draw(num)
+    turtle.screen.getcanvas().postscript(file='%s-%s.ps' % (name, num))
 
     turtle.screen.exitonclick()
