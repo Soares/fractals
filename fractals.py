@@ -80,14 +80,9 @@ def lindenmayer(axiom, rules):
 
     Note: any keys in the "rules" dictionary must be uppercase
     """
-    rules = rules.items()
-
-    def apply_rule(axiom, (symbol, replacement)):
-        return axiom.replace(symbol, replacement.lower())
-
     while True:
         yield axiom
-        axiom = reduce(apply_rule, rules, axiom).upper()
+        axiom = ''.join(rules.get(symbol, symbol) for symbol in axiom)
 
 
 class GeneratorList(object):
@@ -214,7 +209,7 @@ if __name__ == '__main__':
         'snowflake': LSystem(turtle, 'F++F++F', {'F': 'F-F++F-F'}, 60),
         'dragon': LSystem(turtle, 'FX', {'X': 'X+YF', 'Y': 'FX-Y'}, 90),
         'plant': LSystem(turtle, 'FX', {'X': 'F-[[X]+X]+F[+FX]-X', 'F': 'FF'}, 25),
-        'serpinsky': LSystem(turtle, 'FA', {'FA': 'FB-FA-FB', 'FB': 'FA+FB+FA'}, 60),
+        'sierpinsky': LSystem(turtle, 'FA', {'FA': 'FB-FA-FB', 'FB': 'FA+FB+FA'}, 60),
         'colored_dragon': Dragon(turtle),
     }
 
