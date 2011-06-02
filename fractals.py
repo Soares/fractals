@@ -99,7 +99,7 @@ class GeneratorList(object):
 
     def __getitem__(self, index):
         for _ in range(index - len(self.__list) + 1):
-            self.__list.append(self.__generator.next())
+            self.__list.append(next(self.__generator))
         return self.__list[index]
 
 
